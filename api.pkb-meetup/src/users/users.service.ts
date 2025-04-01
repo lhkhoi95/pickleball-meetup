@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../common/supabase/supabase.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,7 +8,7 @@ export class UsersService {
   constructor(private supabase: SupabaseService) {}
 
   async create(createUserDto: CreateUserDto) {
-    console.log("Input user: ", createUserDto)
+    console.log('Input user: ', createUserDto);
     const { data, error } = await this.supabase.client
       .from('users')
       .insert([createUserDto])
@@ -35,6 +35,20 @@ export class UsersService {
       .eq('id', id)
       .single();
 
+    if (error) throw error;
+    return data;
+  }
+
+  async findByEmail(email: string) {
+    const { data, error } = await this.supabase.client
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error?.code === 'PGRST116') {
+      throw new NotFoundException('User not found');
+    }
     if (error) throw error;
     return data;
   }

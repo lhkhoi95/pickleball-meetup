@@ -1,14 +1,19 @@
 import { redirect } from "next/navigation";
-import { currentUser, getAuth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import LandingPage from "@/components/landing-page/LandingPage";
-import { getUser } from "@/lib/serverApis";
+import { getUserByEmail } from "@/lib/serverApis";
 
 export default async function Home() {
   const user = await currentUser();
 
   if (user) {
-    // const dbUser = await getUser(user?.emailAddresses.toString() || "");
-    console.log("USERS:", user?.primaryEmailAddress?.emailAddress);
+    const dbUser = await getUserByEmail(user?.primaryEmailAddress?.emailAddress || "");
+
+
+    // User is not in the database, redirect to onboarding page
+    if (!dbUser) {
+      return redirect("/onboarding");
+    }
 
     redirect("/dashboard");
   }

@@ -1,24 +1,46 @@
-import { useState } from 'react';
-import { fetchApi } from '@/lib/api';
+import { useState, useEffect } from "react";
 
-export function useApi<T>() {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+async function fetchApi<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`API call failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export function useApi<T>(endpoint: string) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchData = async (endpoint: string, options?: RequestInit) => {
-    try {
-      setIsLoading(true);
-      const result = await fetchApi<T>(endpoint, options);
-      setData(result);
-      return result;
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('An error occurred'));
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await fetchApi<T>(endpoint);
+        setData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("An error occurred"));
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  return { data, error, isLoading, fetchData };
+    fetchData();
+  }, [endpoint]);
+
+  return { data, error, isLoading };
 }
