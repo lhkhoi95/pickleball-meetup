@@ -1,5 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "../ui/command";
+import { useState, useEffect } from "react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "../ui/command";
 import { Loader2 } from "lucide-react";
 
 interface Location {
@@ -19,8 +25,6 @@ export function LocationSearch({ value, onChange }: LocationSearchProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
     const fetchSuggestions = async () => {
       if (!value || isSelected) {
         setSuggestions([]);
@@ -31,18 +35,20 @@ export function LocationSearch({ value, onChange }: LocationSearchProps) {
       setOpen(true);
 
       try {
-        const response = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(value)}`);
+        const response = await fetch(
+          `/api/places/autocomplete?input=${encodeURIComponent(value)}`
+        );
         const data = await response.json();
         setSuggestions(data.predictions || []);
       } catch (error) {
-        console.error('Failed to fetch suggestions:', error);
+        console.error("Failed to fetch suggestions:", error);
         setSuggestions([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    timeoutId = setTimeout(fetchSuggestions, 300);
+    const timeoutId: NodeJS.Timeout = setTimeout(fetchSuggestions, 300);
 
     return () => clearTimeout(timeoutId);
   }, [value, isSelected]);
@@ -67,7 +73,9 @@ export function LocationSearch({ value, onChange }: LocationSearchProps) {
       {open && !isSelected && (
         <CommandGroup>
           {suggestions.length === 0 ? (
-            <CommandEmpty className="py-2 text-sm text-muted-foreground">No locations found</CommandEmpty>
+            <CommandEmpty className="py-2 text-sm text-muted-foreground">
+              No locations found
+            </CommandEmpty>
           ) : (
             suggestions.map((suggestion) => (
               <CommandItem

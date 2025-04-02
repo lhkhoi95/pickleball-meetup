@@ -8,7 +8,6 @@ export class UsersService {
   constructor(private supabase: SupabaseService) {}
 
   async create(createUserDto: CreateUserDto) {
-    console.log('Input user: ', createUserDto);
     const { data, error } = await this.supabase.client
       .from('users')
       .insert([createUserDto])
@@ -35,6 +34,9 @@ export class UsersService {
       .eq('id', id)
       .single();
 
+    if (error?.code === 'PGRST116') {
+      throw new NotFoundException('User not found');
+    }
     if (error) throw error;
     return data;
   }
