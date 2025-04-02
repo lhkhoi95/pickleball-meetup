@@ -36,8 +36,21 @@ export function LocationSearch({ value, onChange }: LocationSearchProps) {
 
       try {
         const response = await fetch(
-          `/api/places/autocomplete?input=${encodeURIComponent(value)}`
+          `/api/places/autocomplete?input=${encodeURIComponent(value)}`,
+          {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            // Prevent redirect following
+            redirect: 'error'
+          }
         );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         setSuggestions(data.predictions || []);
       } catch (error) {
@@ -49,7 +62,6 @@ export function LocationSearch({ value, onChange }: LocationSearchProps) {
     };
 
     const timeoutId: NodeJS.Timeout = setTimeout(fetchSuggestions, 300);
-
     return () => clearTimeout(timeoutId);
   }, [value, isSelected]);
 

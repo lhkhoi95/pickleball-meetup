@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { SupabaseService } from '../common/supabase/supabase.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,72 +13,175 @@ export class UsersService {
   constructor(private supabase: SupabaseService) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { data, error } = await this.supabase.client
-      .from('users')
-      .insert([createUserDto])
-      .select()
-      .single();
+    try {
+      const { data, error } = await this.supabase.client
+        .from('users')
+        .insert([createUserDto])
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.log(error);
+        if (error.code === '23505') {
+          // Unique violation
+          throw new BadRequestException('User with this email already exists');
+        }
+        throw new InternalServerErrorException('Failed to create user');
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 
   async findAll() {
-    const { data, error } = await this.supabase.client
-      .from('users')
-      .select('*');
+    try {
+      const { data, error } = await this.supabase.client
+        .from('users')
+        .select('*');
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        throw new InternalServerErrorException('Failed to fetch users');
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 
   async findOne(id: string) {
-    const { data, error } = await this.supabase.client
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      if (!id) {
+        throw new BadRequestException('User ID is required');
+      }
 
-    if (error?.code === 'PGRST116') {
-      throw new NotFoundException('User not found');
+      const { data, error } = await this.supabase.client
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        throw new InternalServerErrorException('Failed to fetch user');
+      }
+
+      return data;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
-    if (error) throw error;
-    return data;
   }
 
   async findByEmail(email: string) {
-    const { data, error } = await this.supabase.client
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
+    try {
+      if (!email) {
+        throw new BadRequestException('Email is required');
+      }
 
-    if (error?.code === 'PGRST116') {
-      throw new NotFoundException('User not found');
+      const { data, error } = await this.supabase.client
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new NotFoundException(`User with email ${email} not found`);
+        }
+        throw new InternalServerErrorException('Failed to fetch user');
+      }
+
+      return data;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
-    if (error) throw error;
-    return data;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const { data, error } = await this.supabase.client
-      .from('users')
-      .update(updateUserDto)
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      if (!id) {
+        throw new BadRequestException('User ID is required');
+      }
 
-    if (error) throw error;
-    return data;
+      const { data, error } = await this.supabase.client
+        .from('users')
+        .update(updateUserDto)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        if (error.code === '23505') {
+          throw new BadRequestException('Email already exists');
+        }
+        throw new InternalServerErrorException('Failed to update user');
+      }
+
+      return data;
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 
   async remove(id: string) {
-    const { error } = await this.supabase.client
-      .from('users')
-      .delete()
-      .eq('id', id);
+    try {
+      if (!id) {
+        throw new BadRequestException('User ID is required');
+      }
 
-    if (error) throw error;
-    return { message: 'User deleted successfully' };
+      const { error } = await this.supabase.client
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        throw new InternalServerErrorException('Failed to delete user');
+      }
+
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
+    }
   }
 }

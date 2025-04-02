@@ -1,7 +1,6 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Users } from 'lucide-react'
-import { User } from '@/types/Users'
 import { useApi } from '@/hooks/useApi'
 
 export default function TotalUsersCard() {

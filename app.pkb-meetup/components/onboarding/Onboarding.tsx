@@ -1,31 +1,16 @@
 "use client"
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { LocationSearch } from "./LocationSearch";
-
-type SkillLevel = {
-    value: string;
-    label: string;
-};
-
-const SKILL_LEVELS = [
-    { value: "1.0-2.0", label: "Beginner (1.0-2.0)" },
-    { value: "2.5-3.0", label: "Intermediate (2.5-3.0)" },
-    { value: "3.5-4.0", label: "Advanced (3.5-4.0)" },
-    { value: "4.5-5.0", label: "Expert (4.5+)" },
-];
-
-const FREQUENCY = [
-    { value: "1", label: "Once a week" },
-    { value: "2-3", label: "2-3 times a week" },
-    { value: "4-5", label: "4-5 times a week" },
-    { value: "6+", label: "6+ times a week" },
-];
+import { FREQUENCY, SKILL_LEVELS } from "@/lib/constants";
 
 export default function Onboarding() {
+    const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         location: "",
         skillLevel: "",
@@ -34,8 +19,29 @@ export default function Onboarding() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: Submit form data to your API
-        console.log(formData);
+        setIsLoading(true);
+
+        try {
+            const response = await fetch("/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to create user");
+            }
+
+            // Redirect to dashboard after successful submission
+            router.push("/dashboard");
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            // Here you might want to show an error message to the user
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -95,8 +101,8 @@ export default function Onboarding() {
                             </Select>
                         </div>
 
-                        <Button type="submit" className="w-full">
-                            Complete Setup
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? "Setting up..." : "Complete Setup"}
                         </Button>
                     </form>
                 </CardContent>
