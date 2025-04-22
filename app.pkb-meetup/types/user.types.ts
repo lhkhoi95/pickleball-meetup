@@ -5,6 +5,7 @@ interface User {
   skillLevel: string;
   frequency: string;
   location: string;
+  imageUrl: string;
   created_at: string;
   updated_at: string;
 }
@@ -16,4 +17,5 @@ interface UserCreate {
   skillLevel: string;
   frequency: string;
   location: string;
+  imageUrl: string;
 }

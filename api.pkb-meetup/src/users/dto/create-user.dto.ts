@@ -55,4 +55,11 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   location: string;
+
+  @ApiProperty({
+    example: 'https://example.com/profile.jpg',
+    description: "User's profile picture URL",
+  })
+  @IsString()
+  imageUrl: string;
 }

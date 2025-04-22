@@ -4,17 +4,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useUser } from "@clerk/nextjs";
-import {
-  Activity,
-  Calendar as CalendarIcon,
-  Trophy,
-} from "lucide-react";
+import { Activity, Calendar as CalendarIcon, Trophy } from "lucide-react";
 import TotalUsersCard from "./TotalUsersCard";
-
+import { useEffect } from "react";
+import { getUserByEmail } from "@/lib/serverApis";
+import { useUserStore } from "@/store/useStore";
 
 export default function Dashboard() {
   const { user: clerkUser } = useUser();
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const setUser = useUserStore((state) => state.setUser);
+
+  useEffect(() => {
+    async function fetchUser() {
+      if (clerkUser) {
+        const user = await getUserByEmail(
+          clerkUser?.primaryEmailAddress?.emailAddress || ""
+        );
+
+        if (user) {
+          setUser(user);
+        }
+      }
+    }
+    fetchUser();
+  }, [clerkUser, setUser]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

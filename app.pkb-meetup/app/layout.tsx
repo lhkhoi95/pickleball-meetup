@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Montserrat_Alternates, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import { Navbar } from "@/components/Navbar";
+import { Toaster } from "@/components/ui/sonner";
 
-const fontObj = Geist({
-  variable: "--font-geist-sans",
+const fontObj = Montserrat_Alternates({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const fontMono = Geist_Mono({
@@ -30,7 +31,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${fontObj.variable} ${fontMono.variable} antialiased`}>
+      <body className={`${fontObj.className} ${fontMono.variable} antialiased`}>
         <ClerkProvider
           appearance={{
             elements: {
@@ -42,6 +43,7 @@ export default async function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             {isLoggedIn && <Navbar />}
             {children}
+            <Toaster />
           </ThemeProvider>
         </ClerkProvider>
       </body>

@@ -1,5 +1,7 @@
 export const COLORS = {
   navbar: "#171717",
+  success: "#379D00",
+  error: "#f44336",
 };
 export const GOOGLE_API_PLACES_URL =
   "https://maps.googleapis.com/maps/api/place/autocomplete/json?";
@@ -16,4 +18,11 @@ export const FREQUENCY = [
   { value: "2-3", label: "2-3 times a week" },
   { value: "4-5", label: "4-5 times a week" },
   { value: "6+", label: "6+ times a week" },
+];
+
+export const USER_DROPDOWN_ITEMS = [
+  { label: "Profile", redirectTo: "/profile" },
+  { label: "Dashboard", redirectTo: "/dashboard" },
+  { label: "Activities", redirectTo: "/activities" },
+  { label: "Settings", redirectTo: "/settings" },
 ];

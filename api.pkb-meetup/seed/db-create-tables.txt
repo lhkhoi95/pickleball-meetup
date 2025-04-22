@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
     skillLevel TEXT NOT NULL,
     frequency TEXT NOT NULL,
     location TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    createdAt TIMESTAMPTZ DEFAULT now(),
+    updatedAt TIMESTAMPTZ DEFAULT now()
 );
 
 -- Automatically update updated_at timestamp on row modification
