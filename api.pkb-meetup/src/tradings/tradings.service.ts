@@ -8,6 +8,7 @@ import {
 import { CreateTradingDto } from './dto/create-trading.dto';
 import { UpdateTradingDto } from './dto/update-trading.dto';
 import { SupabaseService } from '../common/supabase/supabase.service';
+import { MediaFile, TradingPost } from './entities/trading.entity';
 
 @Injectable()
 export class TradingsService {
@@ -35,7 +36,7 @@ export class TradingsService {
     return data;
   }
 
-  async findByUserId(userId: string) {
+  async findByUserId(user_id: string) {
     const { data, error } = await this.supabase.client
       .from('trading_posts')
       .select(
@@ -48,7 +49,7 @@ export class TradingsService {
         )
       `,
       )
-      .eq('user_id', userId)
+      .eq('user_id', user_id)
       .order('created_at', { ascending: false });
 
     if (error) throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
@@ -90,8 +91,8 @@ export class TradingsService {
       .eq('id', id)
       .single();
 
-    if (error) throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     if (!data) throw new NotFoundException(`Trading post #${id} not found`);
+    if (error) throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     return data;
   }
 
@@ -115,7 +116,7 @@ export class TradingsService {
     return data;
   }
 
-  async uploadMedia(userId: string, id: string, files: Express.Multer.File[]) {
+  async uploadMedia(user_id: string, id: string, files: Express.Multer.File[]) {
     const post = await this.findOne(id);
     if (!post) {
       throw new NotFoundException(`Trading post #${id} not found`);
@@ -123,7 +124,7 @@ export class TradingsService {
 
     const mediaFiles = await Promise.all(
       files.map(async (file) => {
-        const filePath = `${userId}/${id}/${Date.now()}-${file.originalname}`;
+        const filePath = `${user_id}/${id}/${Date.now()}-${file.originalname}`;
 
         const { error: uploadError } = await this.supabase.client.storage
           .from('trading-post-media')
@@ -166,7 +167,7 @@ export class TradingsService {
 
   async remove(id: string) {
     // 1. Find the post to get the media file paths
-    const post = await this.findOne(id);
+    const post: TradingPost = await this.findOne(id);
     if (!post) throw new NotFoundException(`Trading post #${id} not found`);
 
     // 2. Remove all media files from storage
@@ -194,35 +195,15 @@ export class TradingsService {
     return { message: 'Trading post and media deleted successfully', data };
   }
 
-  async removeMedia(user_id: string, id: string, fileName: string) {
-    const post = await this.findOne(id);
-    if (!post) throw new NotFoundException(`Trading post #${id} not found`);
-
-    const { error: deleteError } = await this.supabase.client.storage
+  async removeMedia(path: string) {
+    const { error } = await this.supabase.client.storage
       .from('trading-post-media')
-      .remove([`${user_id}/${id}/${fileName}`]);
+      .remove([path]);
 
-    if (deleteError)
-      throw new HttpException(deleteError.message, HttpStatus.BAD_REQUEST);
+    if (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
 
-    const updatedMediaFiles = post.media_files.filter(
-      (file) => !file.path.includes(fileName),
-    );
-
-    const { data, error } = await this.supabase.client
-      .from('trading_posts')
-      .update({
-        media_files: updatedMediaFiles,
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    if (!data) throw new NotFoundException(`Trading post #${id} not found`);
-    return {
-      message: 'Media file deleted successfully',
-      data,
-    };
+    return { message: 'Media file deleted successfully' };
   }
 }

@@ -36,7 +36,7 @@ export class CreateUserDto {
   })
   @IsEnum(UserLevel)
   @IsNotEmpty()
-  skillLevel: UserLevel;
+  skill_level: UserLevel;
 
   @ApiProperty({
     enum: PlayFrequency,
@@ -61,5 +61,5 @@ export class CreateUserDto {
     description: "User's profile picture URL",
   })
   @IsString()
-  imageUrl: string;
+  image_url: string;
 }

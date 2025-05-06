@@ -120,22 +120,24 @@ export class UsersService {
     }
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(updateUserDto: UpdateUserDto) {
     try {
-      if (!id) {
+      if (!updateUserDto.id) {
         throw new BadRequestException('User ID is required');
       }
 
       const { data, error } = await this.supabase.client
         .from('users')
         .update(updateUserDto)
-        .eq('id', id)
+        .eq('id', updateUserDto.id)
         .select()
         .single();
 
       if (error) {
         if (error.code === 'PGRST116') {
-          throw new NotFoundException(`User with ID ${id} not found`);
+          throw new NotFoundException(
+            `User with ID ${updateUserDto.id} not found`,
+          );
         }
         if (error.code === '23505') {
           throw new BadRequestException('Email already exists');

@@ -2,11 +2,11 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL,
     name TEXT NOT NULL,
-    skillLevel TEXT NOT NULL,
+    skill_level TEXT NOT NULL,
     frequency TEXT NOT NULL,
     location TEXT NOT NULL,
-    createdAt TIMESTAMPTZ DEFAULT now(),
-    updatedAt TIMESTAMPTZ DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Automatically update updated_at timestamp on row modification

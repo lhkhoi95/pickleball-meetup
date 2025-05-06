@@ -15,3 +15,10 @@ export enum ItemCategory {
   ACCESSORIES = 'accessories',
   OTHER = 'other',
 }
+
+export enum PostStatus {
+  ACTIVE = 'active',
+  SOLD = 'sold',
+  PENDING = 'pending',
+  CANCELLED = 'cancelled',
+}

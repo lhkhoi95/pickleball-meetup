@@ -37,37 +37,23 @@ CREATE TABLE IF NOT EXISTS trading_posts (
     status post_status DEFAULT 'active',
     media_files JSONB DEFAULT '[]'::JSONB,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    update_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Create index for faster lookups
 CREATE INDEX idx_trading_posts_user_id ON trading_posts(user_id);
 
--- Create trigger for automatic updated_at
+-- Create trigger for automatic update_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = now();
+    NEW.update_at = now();
     RETURN NEW;
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER trigger_trading_posts_updated_at
+CREATE TRIGGER trigger_trading_posts_update_at
     BEFORE UPDATE ON trading_posts
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Add storage bucket for media files
-INSERT INTO storage.buckets (id, name, public) 
-VALUES ('trading-post-media', 'trading-post-media', true);
-
--- Set up storage policies
-CREATE POLICY "Authenticated users can upload media"
-ON storage.objects FOR INSERT 
-TO authenticated 
-WITH CHECK (bucket_id = 'trading-post-media');
-
-CREATE POLICY "Anyone can view media"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'trading-post-media');

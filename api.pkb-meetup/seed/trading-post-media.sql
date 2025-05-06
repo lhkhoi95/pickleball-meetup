@@ -22,7 +22,7 @@ WITH CHECK (
     EXISTS (
       SELECT 1 FROM trading_posts
       WHERE id::text = split_part(storage.objects.name, '/', 1)
-        AND user_id = auth.uid()::text
+        AND userId = auth.uid()::text
     )
   )
 );
@@ -37,7 +37,7 @@ USING (
   (split_part(name, '/', 1) IN (
     SELECT id::text 
     FROM trading_posts 
-    WHERE user_id = auth.uid()::text
+    WHERE userId = auth.uid()::text
   ))
 );
 
@@ -51,9 +51,18 @@ USING (bucket_id = 'trading-post-media');
 -- Enable RLS on the storage.objects table
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
--- Drop-- filepath: supabase/migrations/trading_post_storage_policies.sql
+-- Fix the trigger function for updated_at column
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW."update_at" = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Enable RLS on the storage.objects table
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+DROP TRIGGER IF EXISTS trigger_trading_posts_update_at ON "trading_posts";
 
--- Drop
+CREATE TRIGGER trigger_trading_posts_update_at
+    BEFORE UPDATE ON "trading_posts"
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();

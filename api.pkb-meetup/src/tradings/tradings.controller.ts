@@ -49,15 +49,14 @@ export class TradingsController {
     try {
       const post = await this.tradingsService.create(createTradingDto);
 
-      console.log('Post created:');
       if (files?.length) {
         const updatedPost = await this.tradingsService.uploadMedia(
           post.user_id,
           post.id,
           files,
         );
-        const { user_id, ...updatedPostWithoutUserId } = updatedPost;
-        return updatedPostWithoutUserId;
+
+        return updatedPost;
       }
       return post;
     } catch (error: any) {
@@ -76,12 +75,17 @@ export class TradingsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
+    // Find if post exists
+    const post = this.tradingsService.findOne(id);
+    if (!post) {
+      throw new HttpException('Trading post not found', HttpStatus.NOT_FOUND);
+    }
     return this.tradingsService.findOne(id);
   }
 
-  @Get('user/:userId')
-  findByUserId(@Param('userId') userId: string) {
-    return this.tradingsService.findByUserId(userId);
+  @Get('user/:user_id')
+  findByUserId(@Param('user_id') user_id: string) {
+    return this.tradingsService.findByUserId(user_id);
   }
 
   @Patch(':id')
@@ -123,40 +127,38 @@ export class TradingsController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
+    const post = await this.tradingsService.findOne(id);
+    if (!post) {
+      throw new HttpException('Trading post not found', HttpStatus.NOT_FOUND);
+    }
+
     try {
       return await this.tradingsService.remove(id);
     } catch (error) {
-      const status =
-        typeof error.status === 'number'
-          ? error.status
-          : HttpStatus.INTERNAL_SERVER_ERROR;
+      console.log('Error deleting trading post:', error);
       throw new HttpException(
         error.message || 'Failed to delete trading post',
-        status,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  @Delete(':id/media/:fileName')
-  async removeMedia(
-    @Param('id') id: string,
-    @Param('fileName') fileName: string,
-  ) {
-    const post = await this.tradingsService.findOne(id);
+  @Delete('media/:path')
+  async removeMedia(@Param('path') path: string) {
+    const decodedPath = decodeURIComponent(path);
+    const postId = decodedPath.split('/')[1];
+    const post = await this.tradingsService.findOne(postId);
+    if (!post) {
+      throw new HttpException('Trading post not found', HttpStatus.NOT_FOUND);
+    }
+
     try {
-      return await this.tradingsService.removeMedia(
-        post.user_id,
-        post.id,
-        fileName,
-      );
+      return await this.tradingsService.removeMedia(decodedPath);
     } catch (error) {
-      const status =
-        typeof error.status === 'number'
-          ? error.status
-          : HttpStatus.INTERNAL_SERVER_ERROR;
+      console.log('Error deleting media:', error);
       throw new HttpException(
         error.message || 'Failed to delete media',
-        status,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
