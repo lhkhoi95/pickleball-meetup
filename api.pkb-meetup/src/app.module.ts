@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import configuration from './config/configuration';
 import { SupabaseService } from './common/supabase/supabase.service';
+import { TradingsModule } from './tradings/tradings.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { SupabaseService } from './common/supabase/supabase.service';
       load: [configuration],
     }),
     UsersModule,
+    TradingsModule,
   ],
   providers: [SupabaseService],
 })
